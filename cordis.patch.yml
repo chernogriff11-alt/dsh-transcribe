@@ -1,0 +1,6 @@
+- insert:
+    - id: dsh-transcribe
+      name: '@local/dsh-transcribe'
+      config:
+        language: 'ru'
+        timeoutMs: 180000
