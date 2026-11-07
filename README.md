@@ -308,8 +308,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 ```powershell
 # синтез речи голосом Windows -> маршрут плагина, печатает текст, hit и тайминги
-.\tools\wake-probe.ps1 -Text "окей дипсик" -Route wake
-.\tools\wake-probe.ps1 -Text "привет как дела" -Route wake
+# порт вашего DSH виден в адресной строке GUI, по умолчанию в скрипте 2589
+.\tools\wake-probe.ps1 -Text "окей дипсик" -Route wake -Port <порт>
+.\tools\wake-probe.ps1 -Text "привет как дела" -Route wake -Port <порт>
 
 # нарезка речи, вырезание фразы, дымовой рендер клиента
 node tools\test-wake-engine.mjs
