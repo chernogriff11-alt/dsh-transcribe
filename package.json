@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-transcribe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Голосовой ввод в композер DSH: микрофон рядом с отправкой, панель записи, локальный Parakeet Ultra",
   "type": "module",
