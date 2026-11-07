@@ -81,5 +81,19 @@ for (const input of notStop) {
   console.log(`${heard ? 'FAIL' : 'ok  '} stop ${JSON.stringify(input)} -> not heard`)
 }
 
+// Две команды не должны путаться между собой.
+const pairs = [
+  ['Сделай то-то, стоп чат', true, false],
+  ['Сделай то-то, отправь', false, true],
+  ['Сделай то-то', false, false],
+]
+for (const [input, stopExpected, sendExpected] of pairs) {
+  const stopHeard = endsWithPhrase(input, 'стоп чат')
+  const sendHeard = endsWithPhrase(input, 'отправь')
+  const ok = stopHeard === stopExpected && sendHeard === sendExpected
+  if (!ok) failed++
+  console.log(`${ok ? 'ok  ' : 'FAIL'} pair ${JSON.stringify(input)} -> stop=${stopHeard} send=${sendHeard}`)
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall passed')
 process.exit(failed ? 1 : 0)
