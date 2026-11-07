@@ -131,18 +131,39 @@
 
 - Windows 10/11 x64.
 - DeepSeek Harness 0.2.x (desktop или web).
-- `transcribe-cli.exe` — 3,4 МБ, лежит в [релизах](https://github.com/chernogriff11-alt/dsh-transcribe/releases).
-- Модель `parakeet-ultra-Q8_0.gguf` — 740 МБ, [Hugging Face](https://huggingface.co/handy-computer/parakeet-ultra-gguf).
+- `transcribe-cli.exe` — 3,4 МБ, движок распознавания.
+- Модель `parakeet-ultra-Q8_0.gguf` — 740 МБ (706 МиБ).
+
+И то, и другое **уже вшито в установщик** `dsh-transcribe-setup-<версия>.exe` — интернет при установке
+не нужен.
 
 ## Установка на новом компьютере
 
-### Вариант 1: одной командой
+### Вариант 0: установщик (рекомендуется)
+
+Скачайте `dsh-transcribe-setup-0.4.0.exe` из [релизов](https://github.com/chernogriff11-alt/dsh-transcribe/releases)
+и запустите. Он распакует плагин, движок и модель в правильные места:
+
+| Что | Куда |
+|---|---|
+| плагин (16 файлов) | `%LOCALAPPDATA%\dsh-transcribe` |
+| движок | `%USERPROFILE%\.dsh\bin\transcribe-cli.exe` |
+| модель | `%USERPROFILE%\.dsh\models\parakeet-ultra\parakeet-ultra-Q8_0.gguf` |
+
+Уже существующие файлы не перезаписываются, если размер совпадает. Дальше — **Настройки → Плагины →
+Добавить плагин** → указать `%LOCALAPPDATA%\dsh-transcribe`, перезапустить DSH и обновить страницу (F5).
+
+Установщик не подписан, SmartScreen может предупредить; контрольные суммы — в `SHA256SUMS.txt`.
+Проверить, что он сделает, без записи файлов: `dsh-transcribe-setup-0.4.0.exe --dry-run`.
+
+### Вариант 1: скриптом
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-Скрипт скачает движок и модель в правильные папки. Дальше — установить плагин и перезапустить DSH (шаг 3–4 ниже).
+Скрипт скачает движок и модель в те же папки с GitHub и Hugging Face. Дальше — установить плагин
+и перезапустить DSH (шаг 3–4 ниже).
 
 ### Вариант 2: вручную
 
@@ -175,34 +196,52 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 5. **Проверка.** Откройте `http://127.0.0.1:<порт>/dsh-transcribe/status` — должно быть `"ready": true`.
 
-## Где взять модель
+## Движок и модель: где взять
 
-| Что | Где | Размер |
+| Что | Откуда | Размер |
 |---|---|---|
-| `parakeet-ultra-Q8_0.gguf` | [handy-computer/parakeet-ultra-gguf](https://huggingface.co/handy-computer/parakeet-ultra-gguf) | 740 МБ |
-| `parakeet-ultra-Q4_K_M.gguf` | там же | 486 МБ |
-| `parakeet-ultra-F16.gguf` | там же | 1,26 ГБ |
+| Движок `transcribe-cli.exe` | [релизы dsh-transcribe](https://github.com/chernogriff11-alt/dsh-transcribe/releases) (ассет `transcribe-cli.exe`) | 3,4 МБ |
+| Движок, первоисточник | [handy-computer/transcribe.cpp](https://github.com/handy-computer/transcribe.cpp/releases) — сборка v0.4.1, MIT | 3,4 МБ |
+| Модель `parakeet-ultra-Q8_0.gguf` | [handy-computer/parakeet-ultra-gguf](https://huggingface.co/handy-computer/parakeet-ultra-gguf) | 740 МБ |
+| Модель `Q4_K_M` (полегче) | там же, `parakeet-ultra-Q4_K_M.gguf` | 486 МБ |
+| И то, и другое | внутри `dsh-transcribe-setup-0.4.0.exe` | 744 МБ |
+
+Прямая ссылка на модель:
+`https://huggingface.co/handy-computer/parakeet-ultra-gguf/resolve/main/parakeet-ultra-Q8_0.gguf`
+
+### Куда положить, чтобы DSH подхватил сам
+
+Ничего настраивать не нужно, если файлы лежат здесь:
+
+```
+%USERPROFILE%\.dsh\bin\transcribe-cli.exe
+%USERPROFILE%\.dsh\models\parakeet-ultra\parakeet-ultra-Q8_0.gguf
+```
+
+Плагин ищет движок и модель сам, при старте и на каждый запрос:
+
+**Движок**, по порядку:
+
+1. `cliPath` в настройках плагина;
+2. `%USERPROFILE%\.dsh\bin\transcribe-cli.exe` ← сюда кладёт установщик;
+3. `<папка плагина>\bin\transcribe-cli.exe`;
+4. `transcribe-cli.exe` в `PATH`.
+
+**Модель**, по порядку:
+
+1. `modelPath` в настройках;
+2. `%USERPROFILE%\.dsh\models\parakeet-ultra\*.gguf` ← сюда кладёт установщик (любой `.gguf` в папке,
+   предпочитает Q8_0, затем Q6_K, Q5_K, Q4_K);
+3. `<папка плагина>\models\*.gguf`;
+4. кэш Hugging Face (`~/.cache/huggingface/hub/models--handy-computer--parakeet-ultra-gguf`);
+5. `G:\llm-models\asr\parakeet-ultra\*.gguf`.
+
+Проверка: `http://127.0.0.1:<порт>/dsh-transcribe/status` покажет, что именно найдено и по какому пути.
+Если движок или модель не найдены, плагин пишет это в панели записи, а не падает молча.
 
 Модель — [moondream/parakeet-ultra](https://huggingface.co/moondream/parakeet-ultra), post-trained
 `parakeet-tdt-0.6b-v3`: 25 европейских языков, пунктуация, заглавные, таймкоды, встроенный VAD.
 Лицензия **CC-BY-4.0** — при распространении указывайте автора.
-
-## Где плагин ищет файлы
-
-Движок, по порядку:
-
-1. `cliPath` в настройках плагина;
-2. `%USERPROFILE%\.dsh\bin\transcribe-cli.exe`;
-3. `<папка плагина>\bin\transcribe-cli.exe`;
-4. `transcribe-cli.exe` в `PATH`.
-
-Модель, по порядку:
-
-1. `modelPath` в настройках;
-2. `%USERPROFILE%\.dsh\models\parakeet-ultra\*.gguf` (предпочитает Q8_0, затем Q6_K, Q5_K, Q4_K);
-3. `<папка плагина>\models\*.gguf`;
-4. кэш Hugging Face (`~/.cache/huggingface/hub/models--handy-computer--parakeet-ultra-gguf`);
-5. `G:\llm-models\asr\parakeet-ultra\*.gguf` (для этой машины).
 
 ## Настройка
 
