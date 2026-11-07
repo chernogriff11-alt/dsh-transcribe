@@ -1,6 +1,7 @@
 - insert:
     - id: dsh-transcribe
-      name: '@local/dsh-transcribe'
+      name: 'dsh-transcribe'
       config:
-        language: 'ru'
+        # Оставьте пустым, чтобы язык определялся сам. Или код языка: ru, en, de, fr…
+        language: ''
         timeoutMs: 180000

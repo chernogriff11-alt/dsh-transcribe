@@ -1,8 +1,7 @@
 {
-  "name": "@local/dsh-transcribe",
+  "name": "dsh-transcribe",
   "version": "0.4.0",
-  "private": true,
-  "description": "Голосовой ввод в композер DSH: микрофон рядом с отправкой, панель записи, локальный Parakeet Ultra",
+  "description": "Voice input for DeepSeek Harness: local Parakeet Ultra transcription, a wake phrase, voice stop and send commands, and grammar or prompt rewriting through the chat model.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

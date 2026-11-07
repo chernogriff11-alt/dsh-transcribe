@@ -233,8 +233,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 2. `%USERPROFILE%\.dsh\models\parakeet-ultra\*.gguf` ← сюда кладёт установщик (любой `.gguf` в папке,
    предпочитает Q8_0, затем Q6_K, Q5_K, Q4_K);
 3. `<папка плагина>\models\*.gguf`;
-4. кэш Hugging Face (`~/.cache/huggingface/hub/models--handy-computer--parakeet-ultra-gguf`);
-5. `G:\llm-models\asr\parakeet-ultra\*.gguf`.
+4. кэш Hugging Face (`~/.cache/huggingface/hub/models--handy-computer--parakeet-ultra-gguf`).
 
 Проверка: `http://127.0.0.1:<порт>/dsh-transcribe/status` покажет, что именно найдено и по какому пути.
 Если движок или модель не найдены, плагин пишет это в панели записи, а не падает молча.
@@ -250,9 +249,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```yaml
 - insert:
     - id: dsh-transcribe
-      name: '@local/dsh-transcribe'
+      name: 'dsh-transcribe'
       config:
-        language: 'ru'        # ru | en | auto
+        language: ''          # пусто — язык определяется сам; или подсказка: ru, en, de…
         timeoutMs: 180000     # таймаут одного распознавания
         # cliPath: 'D:\tools\transcribe-cli.exe'
         # modelPath: 'D:\models\parakeet-ultra-Q8_0.gguf'
