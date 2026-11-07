@@ -1,5 +1,21 @@
 # dsh-transcribe
 
+> **English summary** (the details below are in Russian)
+>
+> Voice input for DeepSeek Harness: a microphone next to Send, local Parakeet Ultra transcription,
+> a wake phrase, voice stop/send commands, and grammar or prompt rewriting through the chat model.
+> Audio never leaves the machine; the two rewrite buttons send only the draft text to the model you
+> already use.
+>
+> - **Install:** download `dsh-transcribe-setup-<version>.exe` from
+>   [Releases](https://github.com/chernogriff11-alt/dsh-transcribe/releases), run it, then
+>   Settings → Plugins → Add plugin → `%LOCALAPPDATA%\dsh-transcribe`, restart DSH, refresh (F5).
+> - **Requirements:** Windows 10/11 x64, DeepSeek Harness 0.2.x. The installer already carries the
+>   engine and the model, so no downloads are needed.
+> - **Language:** recognition language is auto-detected by default — set `language: 'en'` (or `ru`,
+>   `de`…) in `cordis.patch.yml` to force one. Plugin metadata is localized (en/ru); the panel
+>   strings are Russian for now.
+
 Голосовой ввод для [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): микрофон рядом с кнопкой
 отправки, аккуратная панель записи с живым предпросмотром, локальное распознавание Parakeet Ultra.
 
