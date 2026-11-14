@@ -142,9 +142,28 @@ function render(label) {
 }
 
 const off = render('wake off')
-const offEar = off.children.find((child) => child && child.props && /dstr-ear/.test(child.props.className || ''))
+const offButtons = off.children.filter((child) => child && child.type === 'button')
+const offMic = offButtons.find((child) => /dstr-btn/.test(child.props.className || '')
+  && !/dstr-ear/.test(child.props.className || '') && !/dstr-tool/.test(child.props.className || ''))
+if (!offMic) throw new Error('wake off: microphone button is missing')
+if (offMic.props.disabled) throw new Error('wake off: microphone button must be enabled')
+const offEar = offButtons.find((child) => child && child.props && /dstr-ear/.test(child.props.className || ''))
 if (!offEar) throw new Error('wake off: ear button is missing')
 if (/is-live/.test(offEar.props.className)) throw new Error('wake off: ear button must not be live')
+// Две кнопки правки текста — отдельные компоненты, их надо вызвать руками.
+const rewrite = off.children.filter((child) => child && typeof child.type === 'function')
+if (rewrite.length !== 2) throw new Error(`wake off: expected two rewrite buttons, got ${rewrite.length}`)
+const tools = rewrite.map((child) => child.type(child.props))
+if (!tools.every((button) => button && button.type === 'button' && /dstr-tool/.test(button.props.className || ''))) {
+  throw new Error('wake off: rewrite components did not render buttons')
+}
+if (!tools.every((button) => button.props.disabled === true)) {
+  throw new Error('wake off: rewrite buttons must be disabled on an empty draft')
+}
+const panels = off.children.filter((child) => child && child.props && /dstr-panel/.test(child.props.className || ''))
+if (panels.length) throw new Error('wake off: panel must be closed while idle')
+const toasts = off.children.filter((child) => child && child.props && /dstr-toast/.test(child.props.className || ''))
+if (toasts.length) throw new Error('wake off: no toast is expected on a fresh render')
 
 store.set('dstr.wake', JSON.stringify({ enabled: true, phrase: 'окей дипсик', pauseMs: 1400 }))
 const on = render('wake on')
@@ -155,5 +174,8 @@ const extra = on.children.filter((child) => child && child.props && /dstr-chip/.
 if (extra.length) throw new Error('wake on: no floating chip is expected any more')
 console.log('wake on: ear button is live, no floating chip')
 
+// Собранные эффекты должны быть функциями: иначе рендер «прошёл», а хуки нет.
+if (!effects.length) throw new Error('no effects were registered')
+if (!effects.every((fn) => typeof fn === 'function')) throw new Error('effect registration is broken')
 console.log(`\neffects registered: ${effects.length}`)
 console.log('all passed')

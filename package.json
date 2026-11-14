@@ -1,6 +1,6 @@
 {
   "name": "dsh-transcribe",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Voice input for DeepSeek Harness: local Parakeet Ultra transcription, a wake phrase, voice stop and send commands, and grammar or prompt rewriting through the chat model.",
   "type": "module",
   "main": "lib/index.js",
@@ -13,11 +13,16 @@
   },
   "files": [
     "lib",
+    "assets",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
     "README.md"
   ],
+  "scripts": {
+    "check": "node --check lib/index.js && node --check lib/client.js",
+    "test": "npm run check && node tools/test-host-route.mjs && node tools/test-wake-match.mjs && node tools/test-wake-engine.mjs && node tools/test-rewrite-button.mjs && node tools/test-client-render.mjs && node tools/test-sound-schemes.mjs"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"

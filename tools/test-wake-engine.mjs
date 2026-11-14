@@ -6,31 +6,17 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { extractFunction } from './extract-function.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const source = readFileSync(path.join(root, 'lib', 'client.js'), 'utf8')
 
-function extractFunction(name) {
-  const start = source.indexOf(`    function ${name}(`)
-  if (start < 0) throw new Error(`function ${name} not found`)
-  const open = source.indexOf('{', start)
-  let depth = 0
-  for (let i = open; i < source.length; i++) {
-    if (source[i] === '{') depth++
-    else if (source[i] === '}') {
-      depth--
-      if (depth === 0) return source.slice(start, i + 1)
-    }
-  }
-  throw new Error(`unbalanced braces in ${name}`)
-}
-
-const regionStart = source.indexOf('    //#region wake')
-const regionEnd = source.indexOf('    //#endregion', regionStart)
+const regionStart = source.indexOf('//#region wake')
+const regionEnd = source.indexOf('//#endregion', regionStart)
 if (regionStart < 0 || regionEnd < 0) throw new Error('wake region not found')
 const region = source.slice(regionStart, regionEnd)
 
-const code = [extractFunction('normalizeText'), region].join('\n')
+const code = [extractFunction(source, 'normalizeText'), region].join('\n')
 const factory = new Function('window', 'performance', 'Uint8Array', `${code}
   return { WakeEngine, LevelTracker }`)
 
@@ -42,16 +28,38 @@ const { WakeEngine } = factory(window, performance, Uint8Array)
 const FRAME_MS = 20
 const FRAME_BYTES = 640 // 320 сэмплов PCM16 = 20 мс при 16 кГц
 
+/** Кадры с узнаваемым содержимым: тест проверяет, что нарезка не рвёт байты. */
+let sent = []
+function makeFrame(seq) {
+  const bytes = new Uint8Array(FRAME_BYTES)
+  for (let i = 0; i < bytes.length; i++) bytes[i] = (seq * 31 + i * 7) & 0xff
+  return bytes
+}
+
 function feed(engine, seconds, rms) {
   const frames = Math.round((seconds * 1000) / FRAME_MS)
   const out = []
   for (let i = 0; i < frames; i++) {
     clock += FRAME_MS
-    const segment = engine.feed(new Uint8Array(FRAME_BYTES), rms)
+    const frame = makeFrame(sent.length)
+    sent.push(frame)
+    const segment = engine.feed(frame, rms)
     if (segment) out.push(segment)
   }
   return out
 }
+
+/** Есть ли `needle` подряд внутри `haystack`. */
+function containsRun(haystack, needle) {
+  const outer = Array.from(haystack)
+  const inner = Array.from(needle)
+  next: for (let i = 0; i + inner.length <= outer.length; i++) {
+    for (let j = 0; j < inner.length; j++) if (outer[i + j] !== inner[j]) continue next
+    return true
+  }
+  return false
+}
+
 
 let failed = 0
 function check(label, condition, detail) {
@@ -78,6 +86,14 @@ function check(label, condition, detail) {
     const seconds = after[0].pcm.byteLength / 2 / 16000
     check('длина сегмента 0,7–1,1 с', seconds >= 0.7 && seconds <= 1.1, `${seconds.toFixed(2)} s`)
     check('сегмент начинается раньше речи', after[0].start < clock - 500, `start=${Math.round(after[0].start)}`)
+    // Нарезка не должна склеивать чужие кадры или терять байты на границе.
+    const tail = after[0].pcm.byteLength / FRAME_BYTES
+    const startFrame = sent.length - 1 - Math.round(tail) + 1
+    check('сегмент — непрерывный кусок записанного потока',
+      Number.isInteger(tail) && startFrame >= 0 && sent[startFrame]
+        ? containsRun(after[0].pcm, sent[startFrame])
+        : false,
+      `frames=${tail}`)
   }
 }
 
